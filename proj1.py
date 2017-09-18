@@ -18,10 +18,11 @@ class st:
         self.accept = accept
 
 
+#def build_dfa(K,S):
+
+
 
 def main():
-
-
     w = int(input("size: "))
     # create the dictionary
     # ("aa",{aa,0}) = state a on input a goes to state aa and the state a is not an accepting state etc...
@@ -104,7 +105,7 @@ def main():
     
 
     
-    x = np.dot(np.array(start_vector),np.linalg.matrix_power(np.array(transition_matrix),w))
+    x = np.dot(np.array(start_vector,dtype=object),np.linalg.matrix_power(np.array(transition_matrix,dtype=object),w))
 
     print(np.dot(x,np.array(final_vector)))
 
