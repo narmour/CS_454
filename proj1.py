@@ -24,10 +24,11 @@ class state:
 		"""
 		Constructor
 		:param name: States name
+		:param parent: The parent of the current state
 		:param final: if it's a final state
 		"""
 		self.name = name
-		self.transition_list = dict() # Empty map to append to later. Pretty much a map of delta functions
+		self.transition_list = dict() # Empty map to append to later. Pretty much a map of state transitions
 		self.parent = parent # Parent state
 		self.parent_transition = None # Keep track of the number we transitioned on
 		self.final = final
@@ -47,21 +48,19 @@ def build_dfa(K, S):
 	:return: DFA Transition Table/Matrix
 	"""
 	S = list(set(S)) # Remove duplicates and put in order
-	print(S)
 	states = K+1 # K remainders + start state = rows
 	matrix = [state('S')] # Special 'start' state
 	matrix += [state(s) for s in range(states-1)] # 0 to K-1 states
 
-	print("Building DFA for K =",K, "and S =",S) # Debug
+	#print("Building DFA for K =",K, "and S =",S) # Debug
 	# Build DFA Matrix
 	for row in matrix:
 		if row.name == 'S' or row.name == 0: # S and 0 are always the same
-			if row.name == 0: # Remainder of 0 which means its the final state
-				row.final = True
+			if row.name == 0: row.final = True # Remainder of 0 which means its the final state
 			[row.add_transition(i, i % K) for i in S]
 		else:
 			next_state = int(str(row.name) + str(S[0])) % K # Concat row and col into int and % K. example: K = 7, row = 1, col = 1, 11 % 7 = 4, so 4 is next state
-			row.add_transition(S[0],next_state) # Add a transition to row dictionary. Basically the delta function d(character, state to go to)
+			row.add_transition(S[0],next_state) # Add a transition to row dictionary. Kind of like the delta function d(character, state to go to)
 			col = 0 # Keep track of previous column
 			for c in S[1:]:
 				next_state = (next_state + (c - S[col])) # Example K = 7, S = [1,5], say next state is 4 (from prev col S[0] = 1) so, 4 + (current_col = S[1] = 5 - prev_col = S[col] = S[0] = 1) = 4+(5-1) = 8
@@ -69,7 +68,6 @@ def build_dfa(K, S):
 				elif next_state < 0: next_state += K # If next_state < K - Probably could do mod above but mod is cubic while add/sub are linear
 				row.add_transition(c, next_state) # Add the transition of current col to next_state
 				col += 1
-		print("State:",row.name, ":", row.transition_list) # Debug
 
 	return matrix
 
@@ -103,122 +101,120 @@ def find_string(dfa):
 			curr = curr.parent
 		return number[::-1] # Reverse
 
-def main():
-	w = int(input("size: "))
-	#w = 3
-	# create the dictionary
-	# ("aa",{aa,0}) = state a on input a goes to state aa and the state a is not an accepting state etc...
-
+def build_map():
 	transition_mappings = dict(
-	[("empty", st("empty", 0)), ("emptya", st("a", 0)), ("emptyb", st("b", 0)), ("emptyc", st("c", 0))
-		, ("aa", st("aa", 0)), ("ab", st("ab", 0)), ("ac", st("ac", 0)), ("ba", st("ba", 0)), ("bb", st("bb", 0))
-		, ("bc", st("bc", 0)), ("ca", st("ca", 0)), ("cb", st("cb", 0)), ("cc", st("cc", 0)), ("aaa", st("reject", 0))
-		, ("aab", st("aab", 0)), ("aac", st("aac", 0)), ("aba", st("aba", 0)), ("abb", st("abb", 0)),
-	 ("abc", st("abc", 0))
-		, ("aca", st("aca", 0)), ("acb", st("acb", 0)), ("acc", st("acc", 0)), ("baa", st("baa", 0)),
-	 ("bab", st("bab", 0))
-		, ("bac", st("bac", 0)), ("bba", st("bba", 0)), ("bbb", st("reject", 0)), ("bbc", st("bbc", 0)),
-	 ("bca", st("bca", 0))
-		, ("bcb", st("bcb", 0)), ("bcc", st("bcc", 0)), ("caa", st("caa", 0)), ("cab", st("cab", 0)),
-	 ("cac", st("cac", 0)), ("cba", st("cba", 0))
-		, ("cbb", st("cbb", 0)), ("cbc", st("cbc", 0)), ("cca", st("cca", 0)), ("ccb", st("ccb", 0)),
-	 ("ccc", st("reject", 0))
-		, ("aaaa", st("reject", 0)), ("aaab", st("reject", 0)), ("aaac", st("reject", 0)), ("aaba", st("reject", 0))
-		, ("aabb", st("reject", 0)), ("aabc", st("abc", 1)), ("aaca", st("reject", 0)), ("aacb", st("acb", 1)),
-	 ("aacc", st("reject", 0))
-		, ("abaa", st("reject", 0)), ("abab", st("reject", 0)), ("abac", st("bac", 1)), ("abba", st("reject", 0)),
-	 ("abbb", st("reject", 0))
-		, ("abbc", st("bbc", 1)), ("abca", st("bca", 1)), ("abcb", st("bcb", 1)), ("abcc", st("bcc", 1)),
-	 ("acaa", st("reject", 0))
-		, ("acab", st("cab", 1)), ("acac", st("reject", 0)), ("acba", st("cba", 1)), ("acbb", st("cbb", 1)),
-	 ("acbc", st("cbc", 1))
-		, ("acca", st("reject", 0)), ("accb", st("ccb", 1)), ("accc", st("reject", 0)), ("baaa", st("reject", 0)),
-	 ("baab", st("reject", 0))
-		, ("baac", st("aac", 1)), ("baba", st("reject", 0)), ("babb", st("reject", 0)), ("babc", st("abc", 1)),
-	 ("baca", st("aca", 1))
-		, ("bacb", st("acb", 1)), ("bacc", st("acc", 1)), ("bbaa", st("reject", 0)), ("bbab", st("reject", 0)),
-	 ("bbac", st("bac", 1))
-		, ("bbba", st("reject", 0)), ("bbbb", st("reject", 0)), ("bbbc", st("reject", 0)), ("bbca", st("bca", 1)),
-	 ("bbcb", st("reject", 0))
-		, ("bbcc", st("reject", 0)), ("bcaa", st("caa", 1)), ("bcab", st("cab", 1)), ("bcac", st("cac", 1)),
-	 ("bcba", st("cba", 1))
-		, ("bcbb", st("reject", 0)), ("bcbc", st("reject", 0)), ("bcca", st("cca", 1)), ("bccb", st("reject", 0)),
-	 ("bccc", st("reject", 0))
-		, ("caaa", st("reject", 0)), ("caab", st("aab", 1)), ("caac", st("reject", 0)), ("caba", st("aba", 1)),
-	 ("cabb", st("abb", 1))
-		, ("cabc", st("abc", 1)), ("caca", st("reject", 0)), ("cacb", st("acb", 1)), ("cacc", st("reject", 0)),
-	 ("cbaa", st("baa", 1))
-		, ("cbab", st("bab", 1)), ("cbac", st("bac", 1)), ("cbba", st("bba", 1)), ("cbbb", st("reject", 0)),
-	 ("cbbc", st("reject", 0))
-		, ("cbca", st("bca", 1)), ("cbcb", st("reject", 0)), ("cbcc", st("reject", 0)), ("ccaa", st("reject", 0)),
-	 ("ccab", st("cab", 1))
-		, ("ccac", st("reject", 0)), ("ccba", st("cba", 1)), ("ccbb", st("reject", 0)), ("ccbc", st("reject", 0)),
-	 ("ccca", st("reject", 0))
-		, ("cccb", st("reject", 0)), ("cccc", st("reject", 0)), ("rejecta", st("reject", 0)),
-	 ("rejectb", st("reject", 0))
-		, ("rejectc", st("reject", 0))
+		[("empty", st("empty", 0)), ("emptya", st("a", 0)), ("emptyb", st("b", 0)), ("emptyc", st("c", 0))
+			, ("aa", st("aa", 0)), ("ab", st("ab", 0)), ("ac", st("ac", 0)), ("ba", st("ba", 0)), ("bb", st("bb", 0))
+			, ("bc", st("bc", 0)), ("ca", st("ca", 0)), ("cb", st("cb", 0)), ("cc", st("cc", 0)),
+		 ("aaa", st("reject", 0))
+			, ("aab", st("aab", 0)), ("aac", st("aac", 0)), ("aba", st("aba", 0)), ("abb", st("abb", 0)),
+		 ("abc", st("abc", 0))
+			, ("aca", st("aca", 0)), ("acb", st("acb", 0)), ("acc", st("acc", 0)), ("baa", st("baa", 0)),
+		 ("bab", st("bab", 0))
+			, ("bac", st("bac", 0)), ("bba", st("bba", 0)), ("bbb", st("reject", 0)), ("bbc", st("bbc", 0)),
+		 ("bca", st("bca", 0))
+			, ("bcb", st("bcb", 0)), ("bcc", st("bcc", 0)), ("caa", st("caa", 0)), ("cab", st("cab", 0)),
+		 ("cac", st("cac", 0)), ("cba", st("cba", 0))
+			, ("cbb", st("cbb", 0)), ("cbc", st("cbc", 0)), ("cca", st("cca", 0)), ("ccb", st("ccb", 0)),
+		 ("ccc", st("reject", 0))
+			, ("aaaa", st("reject", 0)), ("aaab", st("reject", 0)), ("aaac", st("reject", 0)), ("aaba", st("reject", 0))
+			, ("aabb", st("reject", 0)), ("aabc", st("abc", 1)), ("aaca", st("reject", 0)), ("aacb", st("acb", 1)),
+		 ("aacc", st("reject", 0))
+			, ("abaa", st("reject", 0)), ("abab", st("reject", 0)), ("abac", st("bac", 1)), ("abba", st("reject", 0)),
+		 ("abbb", st("reject", 0))
+			, ("abbc", st("bbc", 1)), ("abca", st("bca", 1)), ("abcb", st("bcb", 1)), ("abcc", st("bcc", 1)),
+		 ("acaa", st("reject", 0))
+			, ("acab", st("cab", 1)), ("acac", st("reject", 0)), ("acba", st("cba", 1)), ("acbb", st("cbb", 1)),
+		 ("acbc", st("cbc", 1))
+			, ("acca", st("reject", 0)), ("accb", st("ccb", 1)), ("accc", st("reject", 0)), ("baaa", st("reject", 0)),
+		 ("baab", st("reject", 0))
+			, ("baac", st("aac", 1)), ("baba", st("reject", 0)), ("babb", st("reject", 0)), ("babc", st("abc", 1)),
+		 ("baca", st("aca", 1))
+			, ("bacb", st("acb", 1)), ("bacc", st("acc", 1)), ("bbaa", st("reject", 0)), ("bbab", st("reject", 0)),
+		 ("bbac", st("bac", 1))
+			, ("bbba", st("reject", 0)), ("bbbb", st("reject", 0)), ("bbbc", st("reject", 0)), ("bbca", st("bca", 1)),
+		 ("bbcb", st("reject", 0))
+			, ("bbcc", st("reject", 0)), ("bcaa", st("caa", 1)), ("bcab", st("cab", 1)), ("bcac", st("cac", 1)),
+		 ("bcba", st("cba", 1))
+			, ("bcbb", st("reject", 0)), ("bcbc", st("reject", 0)), ("bcca", st("cca", 1)), ("bccb", st("reject", 0)),
+		 ("bccc", st("reject", 0))
+			, ("caaa", st("reject", 0)), ("caab", st("aab", 1)), ("caac", st("reject", 0)), ("caba", st("aba", 1)),
+		 ("cabb", st("abb", 1))
+			, ("cabc", st("abc", 1)), ("caca", st("reject", 0)), ("cacb", st("acb", 1)), ("cacc", st("reject", 0)),
+		 ("cbaa", st("baa", 1))
+			, ("cbab", st("bab", 1)), ("cbac", st("bac", 1)), ("cbba", st("bba", 1)), ("cbbb", st("reject", 0)),
+		 ("cbbc", st("reject", 0))
+			, ("cbca", st("bca", 1)), ("cbcb", st("reject", 0)), ("cbcc", st("reject", 0)), ("ccaa", st("reject", 0)),
+		 ("ccab", st("cab", 1))
+			, ("ccac", st("reject", 0)), ("ccba", st("cba", 1)), ("ccbb", st("reject", 0)), ("ccbc", st("reject", 0)),
+		 ("ccca", st("reject", 0))
+			, ("cccb", st("reject", 0)), ("cccc", st("reject", 0)), ("rejecta", st("reject", 0)),
+		 ("rejectb", st("reject", 0))
+			, ("rejectc", st("reject", 0))
 
-	 ])  # set comprehension since i only want the unique states in my dfa
-	states = list({state.name for name, state in transition_mappings.items() if
-			   state.name not in ["aaa", "bbb", "ccc", "rejecta", "rejectb", "rejectc"]})
+		 ])  # set comprehension since i only want the unique states in my dfa
+	return transition_mappings
 
+
+def create_transition_matrix(mapping, states):
 	# create transition matrix
 	# i know this can be done in a simple list comprehension
 	transition_matrix = []
 	for i_state in states:
 		transition_matrix.append([])
 		for j_state in states:
-			row = transition_matrix[-1] # last element
+			row = transition_matrix[-1]  # last element
 			count = 0
 			for c in ['a', 'b', 'c']:
-				if transition_mappings[i_state + c].name == j_state:
+				if mapping[i_state + c].name == j_state:
 					count = count + 1
 			row.append(count)
+	return transition_matrix
 
-	for row in transition_matrix:
-		print(row)
-
-	# create start_matrix
-	# TODO: list comprehension
-	start_vector = []
-	for state in states:
-		if state == "empty":
-			start_vector.append(1)
-		else:
-			start_vector.append(0)
-
+def create_final_vector(transition_mappings, states):
 	# create final_vector
 	# this should also be a list comprehension
 	final_vector = []
-	count = 0
-	for state in states:
+	for s in states:
 		final = 0
 		for c in ['a', 'b', 'c']:
-			if (transition_mappings[state + c].accept):
+			if transition_mappings[s + c].accept:
 				final = 1
-		if (final):
+		if final:
 			final_vector.append(1)
-			print(state)
-			count = count + 1
 		else:
 			final_vector.append(0)
+	return final_vector
 
-	print("FINAL STATES: ", count)
+def count(n):
+	transition_mappings = build_map()
 
-	x = np.dot(np.array(start_vector, dtype=object), np.linalg.matrix_power(np.array(transition_matrix, dtype=object), w))
+	states = list({state.name for name, state in transition_mappings.items() if
+				   state.name not in ["aaa", "bbb", "ccc", "rejecta", "rejectb", "rejectc"]})
 
-	print(np.dot(x, np.array(final_vector)))
+	transition_matrix = create_transition_matrix(transition_mappings, states)
 
+	# create start_matrix
+	start_vector = [1 if s == "empty" else 0 for s in states]
+	# Final vector
+	final_vector = create_final_vector(transition_mappings, states)
+	# Possible number of string with length n. u*(A^n)*v
+	x = np.dot(np.array(start_vector, dtype=object), np.linalg.matrix_power(np.array(transition_matrix, dtype=object), n))
+
+	return np.dot(x, np.array(final_vector))
+
+def main():
+	n = int(input("Length = "))
+	print(count(n))
 
 	# Problem 2
 	K = int(input("K = ")) # 13
 	S = input("S = ")# Enter input like S = 2 5 (separated by spaces)
 	S = S.split()
 	S = [int(x) for x in S]
-	print(K, S)
-
 	dfa = build_dfa(K, S) # K = 13 and S = 2 5 gives us 52 (correct according to ravi)
-	print(find_string(dfa)) # Get the smallest integer
+	print(find_string(dfa))
+
 
 
 main()
