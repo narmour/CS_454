@@ -1,15 +1,11 @@
 # make a DFA that accepts strings over {a,b,c} such that eveyr substring
 # of length 4 has at least one occurence of each letter a,b,c.
 
-
-
-
 # how to make DFA
 # hardest part is -  how do i do the transition function
 # create a dictionary. key = state_name + inputsymbol  the element is state_name to switch to
 # once i have the dictionary, i create an array of state_name 
 
-from sys import stdin
 import numpy as np
 
 # STATE class
@@ -20,18 +16,16 @@ class st:
 
 # Scott's state class
 class state:
-	def __init__(self, name, parent=None, final=False):
+	def __init__(self, name):
 		"""
 		Constructor
 		:param name: States name
-		:param parent: The parent of the current state
-		:param final: if it's a final state
 		"""
 		self.name = name
 		self.transition_list = dict() # Empty map to append to later. Pretty much a map of state transitions
-		self.parent = parent # Parent state
+		self.parent = None # Parent state
 		self.parent_transition = None # Keep track of the number we transitioned on
-		self.final = final
+		self.final = False
 	def add_transition(self, char, to_state):
 		"""
 		Add transition to current states transition map. Basically delta function
@@ -174,7 +168,8 @@ def create_transition_matrix(mapping, states):
 def create_final_vector(transition_mappings, states):
 	# create final_vector
 	# this should also be a list comprehension
-	final_vector = [1 if transition_mappings[s+'a'].accept or transition_mappings[s+'b'].accept or transition_mappings[s+'c'].accept else 0 for s in states]
+	final_vector = [1 if transition_mappings[s+'a'].accept or transition_mappings[s+'b'].accept or transition_mappings[s+'c'].accept
+					else 0 for s in states]
 	return final_vector
 
 def count(n):
