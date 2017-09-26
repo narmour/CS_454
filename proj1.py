@@ -174,16 +174,7 @@ def create_transition_matrix(mapping, states):
 def create_final_vector(transition_mappings, states):
 	# create final_vector
 	# this should also be a list comprehension
-	final_vector = []
-	for s in states:
-		final = 0
-		for c in ['a', 'b', 'c']:
-			if transition_mappings[s + c].accept:
-				final = 1
-		if final:
-			final_vector.append(1)
-		else:
-			final_vector.append(0)
+	final_vector = [1 if transition_mappings[s+'a'].accept or transition_mappings[s+'b'].accept or transition_mappings[s+'c'].accept else 0 for s in states]
 	return final_vector
 
 def count(n):
@@ -214,7 +205,6 @@ def main():
 	S = [int(x) for x in S]
 	dfa = build_dfa(K, S) # K = 13 and S = 2 5 gives us 52 (correct according to ravi)
 	print(find_string(dfa))
-
 
 
 main()
